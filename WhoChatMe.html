@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat with AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        body {
+            background-color: #aaaaaa;
+            height: 100vh;
+        }
+        button {
+          background-color: #3333;
+          padding: 10px;
+          color: white;
+          border: 1px solid #333333;
+        }
+        .chat-container {
+            background: #949494;
+            position: fixed;
+            top: 0%;
+            overflow-y: scroll;
+            border: none;
+            bottom: 0.5%;
+            left: 0%;
+            right: 0%;
+            padding: 20px;
+        }
+        .message-container {
+            list-style: none;
+            box-shadow: 0 0 10px grey;
+            padding: 10px 0 0 0 ;
+            border-radius: 20px;
+            overflow: hidden;
+            width: 100%;
+            margin-bottom: 10%;
+        }
+        .user-message {
+            background: #0076ff;
+            border-radius: 10px;
+            padding: 10px;
+            width: 200px;
+            position: relative;
+            box-shadow: 0 0 10px grey;
+            right: -63%;
+            overflow-y: scroll;
+            margin: 10px 0;
+            text-align: center;
+            color: black;
+        }
+        .ai-message {
+            background: #86ba03;
+            box-shadow: 0 0 10px grey;
+            border-radius: 5px 5px 20px 20px;
+            padding: 10px;
+            overflow: scroll;
+            width: 350px;
+            position: relative;
+            text-align: left;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .message-input-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            bottom: 0%;
+            border-radius: 20px 20px 0 0;
+            background-color: #898989;
+            left: 0%;
+            right: 0%;
+            height: 82px;
+        }
+        .message-input {
+          outline: none;
+          width: 80%;
+          position: fixed;
+          height: 25px;
+          padding: 10px;
+          border: none;
+          border-radius: 20px;
+          background-color: #69696969;
+          color: #fff;
+          font-weight: bold;
+          font-size: 20px;
+        }
+        .send-button {
+            background-color: #006bbe;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 14px;
+            right: 1%;
+            outline: none;
+            width: 100px;
+            position: fixed;
+            height: 50px;
+        }
+        input:focus{
+          border: 1px  solid white;
+          color: #66fd00;
+          background-color: #7a7a7a;
+        }
+        input::placeholder{
+          color: #cfcfcf;
+        }
+        button:active{
+          border: 1px solid white;
+        }
+        #header{
+          position: fixed;
+          height: 50px;
+          align-items: center;
+          display: flex;
+          z-index: 10;
+          top: 0%;
+          left: 0%;
+          right: 0%;
+          background-color: #424242;
+        }
+        #menu{
+          width: 50px;
+          height: 50px;
+          padding: 10px;
+          font-size: 20px;
+          margin-left: 10px;
+          font-weight: bold;
+          color: white;
+          background-color: #424242;
+          border: none;
+          border-radius: 50%;
+          box-shadow: 0 0 2px grey;
+          transform: rotate(90deg);
+        }
+        #menu:active{
+          border: 1px solid white;
+        }
+        #settings{
+          z-index: 15;
+          position: fixed;
+          left: 0%;
+          display: none;
+          bottom: 7%;
+          top: 4.7%;
+          width: 200px;
+          background-color: black;
+          padding: 4px;
+          overflow: scroll;
+          text-align: center;
+          border-radius: 7px;
+        }
+        #menu:hover{
+          background-color: #484848;
+        }
+        h1, h2{
+          color: white;
+        }
+    </style>
+</head>
+<body>
+  <header id="header">
+    <button id="menu" onclick="settings ()">|||</button>
+  </header>
+  <div class="chat-container">
+        <ul class="message-container" id="chat">
+        </ul>
+        <div class="message-input-container">
+            <input type="text" id="question" class="message-input" placeholder="Ask Me a question...?">
+            <button type="button" class="send-button" id="ask-button" >Send</button>
+        </div>
+    </div>
+    <div id="settings">
+      <h1> Vibration </h1>
+      <button id="vibration" onclick="vibration()">Add Vibration</button>
+      <button id="silent" onclick="silent()">Silent Vibration</button>
+      <h2>Clear</h2>
+      <button id="clear-button">Clear Chat History</button>
+    </div>
+    <script>
+        window.onload = function() {
+            var savedMessages = localStorage.getItem('messages');
+            if (savedMessages) {
+                document.getElementById('chat').innerHTML = savedMessages;
+            }
+            document.querySelector('.chat-container').scrollTop = document.querySelector('.chat-container').scrollHeight;
+        };
+        function askQuestion() {
+            var question = document.getElementById('question').value;
+            var userMessage = document.createElement('li');
+            userMessage.classList.add('user-message');
+            userMessage.innerHTML = `<i class="fa fa-user">` +`User :` + ` ` + question;
+            document.getElementById('chat').appendChild(userMessage);
+            var aiMessage = document.createElement('li');
+            aiMessage.classList.add('ai-message');
+            aiMessage.innerHTML = `<i class="fa fa-robot"></i>Chatbot...`;
+            document.getElementById('chat').appendChild(aiMessage);
+            document.querySelector('.chat-container').scrollTop =
+                    document.querySelector('.message-container').scrollHeight;
+            fetchAIResponse(question);
+        }
+        function fetchAIResponse(question) {
+            fetch(`https://WellinformedHeavyBootstrapping.yasirmecom.repl.co/ask?question=${encodeURIComponent(question)}`)
+                .then(response => response.text())
+                .then(reply => {
+                    let ax = document.createElement('a');
+                    ax.href = 'https://www.appcreator24.com/app2609448-vag0so';
+                    ax.innerText = "Download Whoapp";
+                    ax.style.fontWeight = "bold";
+                    var aiMessage = document.createElement('li');
+                    aiMessage.classList.add('ai-message');
+                    aiMessage.innerText = `AI: ${reply} Download My app`;
+                    aiMessage.appendChild(ax);
+                    document.getElementById('chat').appendChild(aiMessage);
+                    var messages = document.getElementById('chat').innerHTML;
+                    localStorage.setItem('messages', messages);
+                    document.querySelector('.chat-container').scrollTop =
+                    document.querySelector('.message-container').scrollHeight;
+                });
+        }
+    </script>
+    <script>
+    let his = document.getElementById('ask-button').addEventListener('click', function() {
+            askQuestion()
+            document.getElementById('question').value = '';
+        });
+    </script>
+    <script>
+      function settings () {
+        var button = document.getElementById('settings');
+        var menu = document.getElementById('menu');
+        if (button.style.display === 'block') {
+          button.style.display = 'none';
+        } else {
+          button.style.display = 'block';
+        }
+        if (menu.innerText === '|||') {
+          menu.innerText = 'X';
+        } else {
+          menu.innerText = '|||';
+        }
+      }
+      var buttons = document.querySelectorAll('button');
+        buttons.forEach(function(button) {
+            button.addEventListener('click', function() {
+              if (navigator.vibrate) {
+                navigator.vibrate(90);
+            }
+            });
+        });
+    </script>
+    <script>
+    function vibration () {
+      var buttons = document.querySelectorAll('button');
+        buttons.forEach(function(button) {
+            button.addEventListener('click', function() {
+              if (navigator.vibrate) {
+                navigator.vibrate(90);
+            }
+            });
+        });
+    }
+    function silent () {
+      var buttons = document.querySelectorAll('button');
+        buttons.forEach(function(button) {
+            button.addEventListener('click', function() {
+              if (navigator.vibrate) {
+                navigator.vibrate(0);
+            }
+            });
+        });
+    }
+  </script>
+    <script>
+    document.getElementById('clear-button').addEventListener('click', function() {
+        clearChatHistory();
+    });
+    function clearChatHistory() {
+        his = [];
+        localStorage.removeItem('chatHistory');
+        // Clear the chat container
+        var chatContainer = document.getElementById('chat');
+        while (chatContainer.firstChild) {
+            chatContainer.firstChild.remove();
+        }
+    }
+  </script>
+</body>
+</html>
